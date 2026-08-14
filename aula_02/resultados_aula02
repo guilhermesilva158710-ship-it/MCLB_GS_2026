@@ -1,0 +1,26 @@
+--- RESULTADOS DO LAB 01 ---
+Mensagem: 'Quero consultar quanto dinheiro tenho' ==> Intenção Predita: [fazer_pix]
+Mensagem: 'Pode me ajudar a fazer um pix?' ==> Intenção Predita: [fazer_pix]
+Mensagem: 'Gostaria de cancelar meu cartão de crédito' ==> Intenção Predita: [cancelar_conta]
+
+1 - Teve um resultado incorreto na primeira mensagem, o sistema interpretou como "fazer_pix", mas o certo seria "consultar_saldo"
+2 - Colocar a mensagem incorreta na lista de dados para dar o resultado correto 
+3 - A LogiticRegression é um algoritmo supervisionado usado para classificação, prevendo a probabilidade de cada classe
+Binária: escolhe entre 2 classes (ex: aprovado/reprovado)
+Multiclasse: escolhe entre 3 ou mais classes (ex: consultar_saldo, fazer_pix, cancelar_conta)
+
+
+--- RESULTADOS DO LAB 02 ---
+Mensagem de Teste: 'Gostaria de devolver o produto que comprei'
+Intenção Predita: troca_devolucao
+
+--- Distribuição de Probabilidades por Classe ---
+Classe [duvida_frete]: 27.99%
+Classe [rastrear_pedido]: 24.54%
+Classe [troca_devolucao]: 47.46%
+
+1 - A resposta está correta
+2 - Não tem erro na frase
+3 - O Naive Bayes é um algoritmo de aprendizado de máquida usado para classificar informações, ele funciona usando o Teorema de Bayes para calcular qual classe tem maior chance de ser correta.
+Por exemplo recebendo a frase "Gostaria de devolver o produto que comprei" ele analisa as palavras para descobrir a intenção da mensagem.
+
