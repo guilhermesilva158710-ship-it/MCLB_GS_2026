@@ -7,5 +7,5 @@ Vocabulário Filtrado (sem stopwords): ['2a', '2a via', 'aberto', 'acordo', 'aco
 
 2 - O ngram_range=(1, 2) faz o modelo considerar palavras individuais e combinações de duas palavras e isso ajuda a entender melhor o contexto das frases e identificar expressões importantes como “segunda via”.
 
-3 - A remoção de stopwords ajuda o modelo a evitar erros, pois elimina palavras muito comuns e pouco importantes.
+3 - A remoção de stopwords ajuda o modelo a evitar erros, pois elimina palavras muito comuns e pouco importantes. Assim o modelo consegue focar nas palavras que realmente indicam a intenção, como “boleto” e “fatura”, deixando a classificação mais precisa.
 
