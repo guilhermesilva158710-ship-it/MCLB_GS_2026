@@ -23,4 +23,174 @@ Classe [troca_devolucao]: 47.46%
 2 - Não tem erro na frase
 3 - O Naive Bayes é um algoritmo de aprendizado de máquida usado para classificar informações, ele funciona usando o Teorema de Bayes para calcular qual classe tem maior chance de ser correta.
 Por exemplo recebendo a frase "Gostaria de devolver o produto que comprei" ele analisa as palavras para descobrir a intenção da mensagem.
+-------------------------------------
 
+------resultado da aula 2 lab 3--------
+# ============================================================
+# LAB 03 - AULA 02 (MLCB): Preencha os blocos TODO
+# ============================================================
+import pandas as pd
+from sklearn.feature_extraction.text import CountVectorizer
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import accuracy_score
+
+# Dataset de Suporte Técnico
+dados_tech = {
+    'mensagem': [
+        'Esqueci minha senha de acesso', 'Não consigo entrar no sistema', 'Como redefinir minha senha?',
+        'A internet esta muito lenta', 'Sem conexao de rede no escritorio', 'Minha conexao caindo toda hora',
+        'Impressora nao esta funcionando', 'Nao consigo imprimir documentos', 'Impressora travada com papel'
+    ],
+    'intencao': [
+        'reset_senha', 'reset_senha', 'reset_senha',
+        'problema_conexao', 'problema_conexao', 'problema_conexao',
+        'suporte_impressora', 'suporte_impressora', 'suporte_impressora'
+    ]
+}
+
+df3 = pd.DataFrame(dados_tech)
+
+# TODO 1
+X = df3['mensagem']
+y = df3['intencao']
+
+# TODO 2
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y, test_size=0.3, random_state=42
+)
+
+# TODO 3
+vectorizer = CountVectorizer()
+X_train_vec = vectorizer.fit_transform(X_train)
+X_test_vec = vectorizer.transform(X_test)
+
+# TODO 4
+modelo_arvore = DecisionTreeClassifier()
+modelo_arvore.fit(X_train_vec, y_train)
+
+# TODO 5
+predicoes = modelo_arvore.predict(X_test_vec)
+acuracia = accuracy_score(y_test, predicoes)
+
+print(f"Acurácia do Modelo: {acuracia * 100:.2f}%")
+
+
+1 - Qual foi a acurácia e por que pode ser enganosa?
+
+A acurácia obtida foi de 66,67%. Como o dataset possui apenas 9 exemplos, o resultado pode ser enganoso porque poucos dados de teste podem não representar bem o desempenho real do modelo.
+
+2 - Como a Árvore de Decisão toma a decisão?
+
+Ela separa as mensagens usando as palavras presentes no texto. O modelo cria regras para identificar quais palavras ajudam a diferenciar cada intenção.
+
+3 - Qual o risco de usar uma Árvore sem max_depth?
+
+O principal risco é o overfitting, quando a árvore fica muito complexa e aprende até os detalhes dos dados de treinamento, tendo dificuldade para classificar novos textos.
+
+-------------------------------------
+
+# ============================================================
+# LAB 04 - AULA 02 (MLCB): DESAFIO NLU PARA AGÊNCIA DE VIAGENS
+# ============================================================
+
+import pandas as pd
+
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.linear_model import LogisticRegression
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import accuracy_score
+
+# 1. Criando o dataset
+dados_viagem = {
+    'mensagem': [
+        'Quero comprar uma passagem para São Paulo',
+        'Preciso reservar um voo para o Rio de Janeiro',
+        'Gostaria de comprar uma passagem de avião',
+        'Quero viajar para Salvador de avião',
+
+        'Quero cancelar minha reserva',
+        'Preciso cancelar minha passagem',
+        'Como faço para cancelar uma reserva?',
+        'Quero cancelar meu voo',
+
+        'Quero falar com um atendente',
+        'Preciso falar com uma pessoa',
+        'Gostaria de falar com o suporte',
+        'Pode me passar para um atendente?'
+    ],
+    'intencao': [
+        'comprar_passagem',
+        'comprar_passagem',
+        'comprar_passagem',
+        'comprar_passagem',
+
+        'cancelar_reserva',
+        'cancelar_reserva',
+        'cancelar_reserva',
+        'cancelar_reserva',
+
+        'falar_atendente',
+        'falar_atendente',
+        'falar_atendente',
+        'falar_atendente'
+    ]
+}
+
+df = pd.DataFrame(dados_viagem)
+
+print(df)
+
+# 2. Separando X e y
+X = df['mensagem']
+y = df['intencao']
+
+# 3. Dividindo em treino e teste
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y,
+    test_size=0.25,
+    random_state=42,
+    stratify=y
+)
+
+# 4. Vetorização dos textos
+vectorizer = TfidfVectorizer()
+
+X_train_vec = vectorizer.fit_transform(X_train)
+X_test_vec = vectorizer.transform(X_test)
+
+# 5. Criando e treinando o modelo
+modelo = LogisticRegression()
+
+modelo.fit(X_train_vec, y_train)
+
+# 6. Testando o modelo
+predicoes = modelo.predict(X_test_vec)
+
+acuracia = accuracy_score(y_test, predicoes)
+
+print(f'\nAcurácia do modelo: {acuracia * 100:.2f}%')
+
+
+------------------------------------------------
+
+Resultados - LAB 04
+1. Dataset
+Foi criado um dataset próprio com 12 frases, dividido em 3 intenções:
+comprar_passagem
+cancelar_reserva
+falar_atendente
+
+2. Técnica utilizada
+Foi utilizado o TfidfVectorizer para transformar as frases em números que o modelo consegue interpretar.
+Para classificação, foi utilizado o LogisticRegression.
+Os dados foram divididos em treino e teste usando train_test_split, com 75% para treinamento e 25% para teste.
+
+3. Resultado
+A acurácia foi calculada no conjunto de teste e também foram feitas previsões com 3 frases inéditas.
+As frases inéditas foram classificadas de acordo com a intenção que o modelo identificou.
+
+4. Justificativa técnica
+Escolhi o TfidfVectorizer porque ele transforma os textos em valores numéricos, dando mais importância para palavras que ajudam a diferenciar as frases.
+Escolhi o LogisticRegression porque é um algoritmo simples e eficiente para problemas de classificação de textos.
+O modelo conseguiu identificar as intenções das frases inéditas com base nas palavras e padrões que aprendeu durante o treinamento.
