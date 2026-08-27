@@ -35,51 +35,6 @@ horario_atendimento       0.50      1.00      0.67         1
  3 - Porque ela pode enganar quando as classes estão desbalanceadas, porque o modelo pode acertar muito a classe majoritária e quase nunca acertar a classe minoritária.
 
  --- RESULTADOS DO LAB 03 (AULA 03) ---
-
- import pandas as pd
-from sklearn.pipeline import Pipeline
-from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.linear_model import LogisticRegression
-from sklearn.model_selection import train_test_split
-from sklearn.metrics import accuracy_score
-
-
-# 1. Criando os dados
-dados_rh = {
-    'mensagem': [
-        'Como solicitar minhas ferias?', 'Quero agendar meu periodo de ferias',
-        'Onde baixo meu holerite do mes?', 'Preciso do comprovante de rendimentos',
-        'Como cadastrar meu atestado medico?', 'Onde envio o atestado de consulta?'
-    ],
-    'intencao': [
-        'solicitar_ferias', 'solicitar_ferias',
-        'obter_holerite', 'obter_holerite',
-        'enviar_atestado', 'enviar_atestado'
-    ]
-}
-# 2. Transformando os dados em uma tabela
-df3 = pd.DataFrame(dados_rh)
-print(df3)
-
-# 3. Separando entrada (X) e resposta (y)
-x= df3['mensagem']
-y= df3['intencao']
-
-
-# 4. Separando os dados em treinamento e teste
-train_test_split(
-    x,
-    y,
-    test_size=0.33,
-    random_state=42
-)
-
-# 5. Criando o Pipeline
-pipeline = Pipeline([
-    ('vectorizer', TfidfVectorizer()),
-    ('classifier', LogisticRegression())
-])
-
 #========== PRODUÇÃO DO RELATÓRIO:==============
 # 1 - Cole o código corrigido e a acurácia obtida.
  import pandas as pd
