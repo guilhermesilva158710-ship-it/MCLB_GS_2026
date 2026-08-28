@@ -1,0 +1,14 @@
+Relatório de Avaliação NLU - SAC Móveis Residenciais
+1. Comparação
+Modelo	Acurácia	F1-Score	Erros
+KNN (K=3)	100%	100%	Nenhum
+Decision Tree	80%	80%	Alguns erros entre as intenções
+
+2. Testes
+KNN: Classificou bem as frases e acionou o fallback quando a confiança ficou abaixo de 50%, como no teste com "banana".
+Decision Tree: Classificou algumas frases erradas com 100% de confiança, então o fallback não funcionou tão bem.
+
+3. Veredito
+Melhor modelo: KNN (K=3).
+Justificativa: Teve maior acurácia e F1-Score e apresentou um comportamento melhor no fallback. Para este dataset,
+foi o modelo que apresentou o melhor resultado.
