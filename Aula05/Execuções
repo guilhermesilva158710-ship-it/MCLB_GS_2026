@@ -1,0 +1,44 @@
+Exercicio - 01:
+import re
+import nltk
+from nltk.corpus import stopwords
+import spacy
+
+nltk.download('stopwords', quiet=True)
+stop_words_pt = set(stopwords.words('portuguese'))
+
+# Carregar o modelo morfológico do Spacy em Português
+nlp = spacy.load("pt_core_news_sm")
+
+
+def limpar_e_lemmatizar(texto):
+    """
+    Função para tratar texto bruto:
+    1. Converte para minúsculas
+    2. Remove caracteres especiais, pontuações e números via Regex
+    3. Remove Stop Words e realiza Lemmatization via Spacy
+    """
+    # TODO 1: Converter para minúsculas
+    texto_limpo = texto.lower()
+
+    # TODO 2: Remover tudo que não for letra ou espaço usando re.sub
+    texto_limpo = re.sub(r'[^a-záàâãéèêíïóôõöúçñ\s]', '', texto_limpo)
+
+    # Processamento com Spacy
+    doc = nlp(texto_limpo)
+
+    # TODO 3: Extrair o lema (token.lemma_) ignorando stop words e espaços vazios
+    tokens_filtrados = [
+        token.lemma_ for token in doc
+        if token.text not in stop_words_pt and not token.is_space and len(token.text) > 1
+    ]
+
+    return " ".join(tokens_filtrados)
+
+
+# === TESTE DO EXERCÍCIO 1 ===
+frase_teste = "Gostaria de saber se vocês estão DEVOLVENDO os valores das mesas compradas!!!"
+print("Frase Original:", frase_teste)
+print("Frase Limpa & Lemmatizada:", limpar_e_lemmatizar(frase_teste))
+
+Exercicio - 02 :
