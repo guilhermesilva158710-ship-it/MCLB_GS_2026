@@ -3,3 +3,5 @@ Exercicio - 01 :
 - Frase Limpa & Lemmatizada: gostar saber devolver valor meso comprada
 
 Exercicio - 02 :
+-Carregando modelo de Embeddings FastText (Gensim)...
+-Formato da Matriz de Vetores Densos (Exemplos, Dimensões): (6, 50)
