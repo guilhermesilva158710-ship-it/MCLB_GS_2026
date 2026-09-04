@@ -42,28 +42,6 @@ print("Frase Original:", frase_teste)
 print("Frase Limpa & Lemmatizada:", limpar_e_lemmatizar(frase_teste))
 
 Exercicio - 02 :
----------- DATASET -------------------
-import pandas as pd
-
-dados_teste = {
-    "mensagem": [
-        "quero saber sobre a devolucao do meu sofaa",
-        "o produto chegou com defeito",
-        "gostaria de trocar o item comprado",
-        "qual o prazo de entrega da minha mesaa",
-        "o armario veio quebrado",
-        "como faco pra cancelar meu pedido"
-    ],
-    "categoria": [
-        "devolucao", "defeito", "troca", "entrega", "defeito", "cancelamento"
-    ]
-}
-
-df_teste = pd.DataFrame(dados_teste)
-df_teste.to_csv("sac_moveis_ac2.csv", index=False)
-print("CSV de teste criado com sucesso!")
-
------------ CÓDIGO ---------------------
 import numpy as np
 import pandas as pd
 import gensim.downloader as api
