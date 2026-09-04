@@ -4,4 +4,4 @@ Exercicio - 01 :
 
 Exercicio - 02 :
 -Carregando modelo de Embeddings FastText (Gensim)...
--Formato da Matriz de Vetores Densos (Exemplos, Dimensões): (6, 50)
+-Formato da Matriz de Vetores Densos (Exemplos, Dimensões): (32, 50)
