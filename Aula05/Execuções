@@ -1,78 +1,941 @@
-Exercicio - 01:
+# ============================================================
+# AC-2 PARTE 1 - CONSTRUÇÃO DE UM MOTOR NLU PARA CHATBOT
+# Aula 05 - Machine Learning / NLU
+# ============================================================
+
 import re
+from pathlib import Path
+
+import numpy as np
+import pandas as pd
 import nltk
-from nltk.corpus import stopwords
 import spacy
+import matplotlib.pyplot as plt
+import seaborn as sns
 
-nltk.download('stopwords', quiet=True)
-stop_words_pt = set(stopwords.words('portuguese'))
+from nltk.corpus import stopwords
+from gensim.models import FastText
 
-# Carregar o modelo morfológico do Spacy em Português
-nlp = spacy.load("pt_core_news_sm")
+from sklearn.linear_model import LogisticRegression
+from sklearn.neighbors import KNeighborsClassifier
+
+from sklearn.metrics import (
+    accuracy_score,
+    precision_score,
+    recall_score,
+    f1_score,
+    classification_report,
+    confusion_matrix
+)
+
+
+# ============================================================
+# CONFIGURAÇÃO DOS ARQUIVOS
+# ============================================================
+
+# Descobre automaticamente a pasta onde este programa está
+PASTA_PROJETO = Path(__file__).resolve().parent
+
+ARQUIVO_TREINO = PASTA_PROJETO / "sac_moveis_ac2_treino.csv"
+ARQUIVO_TESTE = PASTA_PROJETO / "sac_moveis_ac2_teste.csv"
+ARQUIVO_OOD = PASTA_PROJETO / "sac_moveis_ac2_ood.csv"
+
+
+# ============================================================
+# PREPARAÇÃO DO AMBIENTE
+# ============================================================
+
+print("=" * 70)
+print("PREPARANDO O AMBIENTE")
+print("=" * 70)
+
+nltk.download("stopwords", quiet=True)
+
+stop_words_pt = set(stopwords.words("portuguese"))
+
+try:
+    nlp = spacy.load("pt_core_news_sm")
+except Exception:
+    print("\nERRO: modelo do spaCy não encontrado.")
+    print("Execute:")
+    print("python -m spacy download pt_core_news_sm")
+    exit()
+
+print("Ambiente preparado com sucesso!")
+
+
+# ============================================================
+# VERIFICAR DATASETS
+# ============================================================
+
+print("\n")
+print("=" * 70)
+print("VERIFICANDO DATASETS")
+print("=" * 70)
+
+arquivos = [
+    ARQUIVO_TREINO,
+    ARQUIVO_TESTE,
+    ARQUIVO_OOD
+]
+
+for arquivo in arquivos:
+    if not arquivo.exists():
+        print(f"\nERRO: arquivo não encontrado:")
+        print(arquivo)
+        print("\nPrimeiro execute:")
+        print("python dataset_sintetico_aula05.py")
+        exit()
+
+print("Todos os arquivos foram encontrados!")
+
+
+# ============================================================
+# CARREGAR DATASETS
+# ============================================================
+
+df_treino = pd.read_csv(
+    ARQUIVO_TREINO
+)
+
+df_teste = pd.read_csv(
+    ARQUIVO_TESTE
+)
+
+df_ood = pd.read_csv(
+    ARQUIVO_OOD
+)
+
+print("\nDatasets carregados com sucesso!")
+
+print(f"Treinamento: {len(df_treino)} mensagens")
+print(f"Teste:       {len(df_teste)} mensagens")
+print(f"OOD:         {len(df_ood)} mensagens")
+
+
+# ============================================================
+# EXERCÍCIO 1
+# PRÉ-PROCESSAMENTO
+# ============================================================
+
+print("\n")
+print("=" * 70)
+print("EXERCÍCIO 1 - PRÉ-PROCESSAMENTO")
+print("=" * 70)
 
 
 def limpar_e_lemmatizar(texto):
     """
-    Função para tratar texto bruto:
-    1. Converte para minúsculas
-    2. Remove caracteres especiais, pontuações e números via Regex
-    3. Remove Stop Words e realiza Lemmatization via Spacy
+    Normaliza uma mensagem:
+    - minúsculas
+    - remove números e pontuação
+    - remove stop words
+    - realiza lemmatization
+    - remove tokens muito curtos
     """
-    # TODO 1: Converter para minúsculas
+
+    texto = str(texto)
+
+    # 1. Minúsculas
     texto_limpo = texto.lower()
 
-    # TODO 2: Remover tudo que não for letra ou espaço usando re.sub
-    texto_limpo = re.sub(r'[^a-záàâãéèêíïóôõöúçñ\s]', '', texto_limpo)
+    # 2. Remover números e caracteres especiais
+    texto_limpo = re.sub(
+        r'[^a-záàâãéèêíïóôõöúçñ\s]',
+        '',
+        texto_limpo
+    )
 
-    # Processamento com Spacy
+    # 3. Processar com spaCy
     doc = nlp(texto_limpo)
 
-    # TODO 3: Extrair o lema (token.lemma_) ignorando stop words e espaços vazios
-    tokens_filtrados = [
-        token.lemma_ for token in doc
-        if token.text not in stop_words_pt and not token.is_space and len(token.text) > 1
-    ]
+    tokens_filtrados = []
+
+    for token in doc:
+
+        # Ignorar espaços
+        if token.is_space:
+            continue
+
+        # Ignorar stop words
+        if token.text in stop_words_pt:
+            continue
+
+        # Ignorar tokens muito pequenos
+        if len(token.text) <= 1:
+            continue
+
+        # Lematização
+        lema = token.lemma_.lower().strip()
+
+        if lema:
+            tokens_filtrados.append(lema)
 
     return " ".join(tokens_filtrados)
 
 
-# === TESTE DO EXERCÍCIO 1 ===
-frase_teste = "Gostaria de saber se vocês estão DEVOLVENDO os valores das mesas compradas!!!"
-print("Frase Original:", frase_teste)
-print("Frase Limpa & Lemmatizada:", limpar_e_lemmatizar(frase_teste))
+# ============================================================
+# TESTE DO EXERCÍCIO 1
+# ============================================================
 
-Exercicio - 02 :
-import numpy as np
-import pandas as pd
-import gensim.downloader as api
+frase_teste = (
+    "Gostaria de saber se vocês estão DEVOLVENDO "
+    "os valores das mesas compradas!!!"
+)
 
-print("Carregando modelo de Embeddings FastText (Gensim)...")
-# Utilizando o modelo pré-treinado do Gensim em português ou substituto equivalente
-fasttext_model = api.load("glove-wiki-gigaword-50")  # Exemplo leve de 50 dimensões para testes em aula
+resultado = limpar_e_lemmatizar(
+    frase_teste
+)
+
+print("\nFrase original:")
+print(frase_teste)
+
+print("\nFrase normalizada:")
+print(resultado)
 
 
-def obter_vetor_frase(frase, model):
+# ============================================================
+# DIAGNÓSTICO DO PRÉ-PROCESSAMENTO
+# ============================================================
+
+def analisar_preprocessamento(texto):
+
+    texto_original = str(texto)
+
+    # Tokens antes do processamento
+    tokens_antes = re.findall(
+        r'\b[^\W\d_]+\b',
+        texto_original.lower(),
+        flags=re.UNICODE
+    )
+
+    # Texto normalizado
+    texto_normalizado = limpar_e_lemmatizar(
+        texto_original
+    )
+
+    # Tokens depois
+    tokens_finais = texto_normalizado.split()
+
+    # Mostrar diagnóstico
+    print("\n")
+    print("-" * 70)
+    print("DIAGNÓSTICO DO PRÉ-PROCESSAMENTO")
+    print("-" * 70)
+
+    print("\nTexto original:")
+    print(texto_original)
+
+    print("\nTexto normalizado:")
+    print(texto_normalizado)
+
+    print("\nQuantidade de caracteres:")
+    print(len(texto_original))
+
+    print("\nQuantidade de tokens antes:")
+    print(len(tokens_antes))
+
+    print("\nQuantidade de tokens depois:")
+    print(len(tokens_finais))
+
+    print("\nTokens removidos:")
+    print([
+        token
+        for token in tokens_antes
+        if token not in tokens_finais
+    ])
+
+    print("\nTokens finais:")
+    print(tokens_finais)
+
+
+# Teste solicitado pela atividade
+analisar_preprocessamento(
+    "MEU sofá!!! chegou quebrado e quero DEVOLVER!!!"
+)
+
+
+# ============================================================
+# EXERCÍCIO 2
+# FASTTEXT + MEAN POOLING
+# ============================================================
+
+print("\n")
+print("=" * 70)
+print("EXERCÍCIO 2 - FASTTEXT + MEAN POOLING")
+print("=" * 70)
+
+
+# ============================================================
+# PRÉ-PROCESSAR DATASETS
+# ============================================================
+
+print("\nNormalizando mensagens...")
+
+df_treino["mensagem_normalizada"] = (
+    df_treino["mensagem"]
+    .apply(limpar_e_lemmatizar)
+)
+
+df_teste["mensagem_normalizada"] = (
+    df_teste["mensagem"]
+    .apply(limpar_e_lemmatizar)
+)
+
+df_ood["mensagem_normalizada"] = (
+    df_ood["mensagem"]
+    .apply(limpar_e_lemmatizar)
+)
+
+print("Mensagens normalizadas!")
+
+
+# ============================================================
+# CRIAR CORPUS
+# ============================================================
+
+corpus_tokenizado = [
+    mensagem.split()
+    for mensagem in df_treino["mensagem_normalizada"]
+]
+
+print("\nQuantidade de mensagens no corpus:")
+print(len(corpus_tokenizado))
+
+
+# ============================================================
+# TREINAR FASTTEXT
+# ============================================================
+
+print("\nTreinando FastText...")
+
+modelo_fasttext = FastText(
+    sentences=corpus_tokenizado,
+    vector_size=50,
+    window=3,
+    min_count=1,
+    workers=4,
+    sg=1
+)
+
+print("FastText treinado com sucesso!")
+
+print(
+    "Dimensão dos vetores:",
+    modelo_fasttext.vector_size
+)
+
+
+# ============================================================
+# MEAN POOLING
+# ============================================================
+
+def obter_vetor_frase(frase, modelo):
     """
-    Calcula a média dos vetores das palavras de uma frase (Mean Pooling).
+    Transforma uma frase em um único vetor
+    utilizando Mean Pooling.
     """
+
     palavras = frase.split()
+
     vetores = []
 
     for palavra in palavras:
-        if palavra in model:
-            # TODO 1: Adicionar o vetor da palavra na lista de vetores
-            vetores.append(model[palavra])
 
+        try:
+            vetor = modelo.wv[palavra]
+            vetores.append(vetor)
+
+        except KeyError:
+            continue
+
+    # Nenhum vetor encontrado
     if len(vetores) == 0:
-        # Se nenhuma palavra estiver no vocabulário, retorna vetor de zeros
-        return np.zeros(model.vector_size)
 
-    # TODO 2: Retornar a média ao longo do eixo 0 (np.mean)
-    vetor_medio = np.mean(vetores, axis=0)
+        return np.zeros(
+            modelo.vector_size
+        )
+
+    # Média dos vetores
+    vetor_medio = np.mean(
+        vetores,
+        axis=0
+    )
+
     return vetor_medio
 
 
-# === TESTE DO EXERCÍCIO 2 ===
-df = pd.read_csv("sac_moveis_ac2.csv")
-X_vetores = np.array([obter_vetor_frase(msg, fasttext_model) for msg in df['mensagem']])
-print("Formato da Matriz de Vetores Densos (Exemplos, Dimensões):", X_vetores.shape)
+# ============================================================
+# TESTE DO MEAN POOLING
+# ============================================================
+
+frase = "quero devolver meu sofá"
+
+frase_normalizada = limpar_e_lemmatizar(
+    frase
+)
+
+vetor = obter_vetor_frase(
+    frase_normalizada,
+    modelo_fasttext
+)
+
+print("\nFrase:")
+print(frase)
+
+print("\nFrase normalizada:")
+print(frase_normalizada)
+
+print("\nTamanho do vetor:")
+print(vetor.shape)
+
+
+# ============================================================
+# CRIAR VETORES DOS DADOS
+# ============================================================
+
+X_train_vec = np.array([
+    obter_vetor_frase(
+        mensagem,
+        modelo_fasttext
+    )
+    for mensagem in df_treino["mensagem_normalizada"]
+])
+
+X_test_vec = np.array([
+    obter_vetor_frase(
+        mensagem,
+        modelo_fasttext
+    )
+    for mensagem in df_teste["mensagem_normalizada"]
+])
+
+X_ood_vec = np.array([
+    obter_vetor_frase(
+        mensagem,
+        modelo_fasttext
+    )
+    for mensagem in df_ood["mensagem_normalizada"]
+])
+
+
+# Classes
+y_train = df_treino["intencao"].values
+
+y_test = df_teste["intencao"].values
+
+y_ood = df_ood["intencao"].values
+
+
+print("\nFormato X_train:")
+print(X_train_vec.shape)
+
+print("\nFormato X_test:")
+print(X_test_vec.shape)
+
+print("\nFormato X_ood:")
+print(X_ood_vec.shape)
+
+
+# ============================================================
+# EXERCÍCIO 3
+# REGRESSÃO LOGÍSTICA
+# ============================================================
+
+print("\n")
+print("=" * 70)
+print("EXERCÍCIO 3 - CLASSIFICADOR DE INTENÇÕES")
+print("=" * 70)
+
+
+# ============================================================
+# TREINAR MODELO
+# ============================================================
+
+modelo_logistico = LogisticRegression(
+    max_iter=1000
+)
+
+modelo_logistico.fit(
+    X_train_vec,
+    y_train
+)
+
+print("\nModelo treinado!")
+
+
+# ============================================================
+# TESTAR MODELO
+# ============================================================
+
+y_pred = modelo_logistico.predict(
+    X_test_vec
+)
+
+
+# ============================================================
+# RELATÓRIO
+# ============================================================
+
+print("\n")
+print("-" * 70)
+print("CLASSIFICATION REPORT")
+print("-" * 70)
+
+print(
+    classification_report(
+        y_test,
+        y_pred,
+        zero_division=0
+    )
+)
+
+
+# ============================================================
+# MÉTRICAS
+# ============================================================
+
+accuracy_logistico = accuracy_score(
+    y_test,
+    y_pred
+)
+
+precision_logistico = precision_score(
+    y_test,
+    y_pred,
+    average="weighted",
+    zero_division=0
+)
+
+recall_logistico = recall_score(
+    y_test,
+    y_pred,
+    average="weighted",
+    zero_division=0
+)
+
+f1_logistico = f1_score(
+    y_test,
+    y_pred,
+    average="weighted",
+    zero_division=0
+)
+
+
+print("\nMÉTRICAS")
+print("-" * 70)
+
+print(f"Accuracy:  {accuracy_logistico:.2%}")
+print(f"Precision: {precision_logistico:.2%}")
+print(f"Recall:    {recall_logistico:.2%}")
+print(f"F1-Score:  {f1_logistico:.2%}")
+
+
+# ============================================================
+# MATRIZ DE CONFUSÃO
+# ============================================================
+
+cm = confusion_matrix(
+    y_test,
+    y_pred
+)
+
+plt.figure(
+    figsize=(8, 6)
+)
+
+sns.heatmap(
+    cm,
+    annot=True,
+    fmt="d",
+    cmap="Blues",
+    xticklabels=modelo_logistico.classes_,
+    yticklabels=modelo_logistico.classes_
+)
+
+plt.xlabel("Intenção prevista")
+plt.ylabel("Intenção real")
+plt.title("Matriz de Confusão - Regressão Logística")
+
+plt.tight_layout()
+plt.show()
+
+
+# ============================================================
+# FUNÇÃO DE CLASSIFICAÇÃO + FALLBACK
+# ============================================================
+
+def classificar_mensagem(
+    mensagem,
+    modelo,
+    modelo_embedding,
+    limiar=0.50
+):
+
+    # Normalizar mensagem
+    texto_normalizado = limpar_e_lemmatizar(
+        mensagem
+    )
+
+    # Criar vetor
+    vetor = obter_vetor_frase(
+        texto_normalizado,
+        modelo_embedding
+    )
+
+    # Probabilidades
+    probabilidades = modelo.predict_proba(
+        [vetor]
+    )[0]
+
+    # Maior probabilidade
+    indice = np.argmax(
+        probabilidades
+    )
+
+    # Intenção
+    intencao = modelo.classes_[indice]
+
+    # Confiança
+    confianca = probabilidades[indice]
+
+    # Fallback
+    if confianca >= limiar:
+
+        resultado = intencao
+
+    else:
+
+        resultado = "FALLBACK_HUMANO"
+
+    return resultado, confianca
+
+
+# ============================================================
+# TESTES DO CHATBOT
+# ============================================================
+
+print("\n")
+print("=" * 70)
+print("TESTES DO CHATBOT")
+print("=" * 70)
+
+testes = [
+
+    "quero devolver meu sofá",
+
+    "como faço para realizar a devolução?",
+
+    "cadê meu pedido?",
+
+    "meu pedido nao chego",
+
+    "qual é a previsão do tempo?"
+
+]
+
+
+for mensagem in testes:
+
+    intencao, confianca = classificar_mensagem(
+        mensagem,
+        modelo_logistico,
+        modelo_fasttext,
+        limiar=0.50
+    )
+
+    print("\n" + "-" * 70)
+
+    print("Mensagem:")
+    print(mensagem)
+
+    print("\nIntenção:")
+    print(intencao)
+
+    print(
+        f"\nConfiança: {confianca:.2%}"
+    )
+
+
+# ============================================================
+# EXERCÍCIO 4
+# REGRESSÃO LOGÍSTICA X KNN
+# ============================================================
+
+print("\n")
+print("=" * 70)
+print("EXERCÍCIO 4 - REGRESSÃO LOGÍSTICA X KNN")
+print("=" * 70)
+
+
+# ============================================================
+# CRIAR MODELOS
+# ============================================================
+
+modelo_logistico = LogisticRegression(
+    max_iter=1000
+)
+
+modelo_knn = KNeighborsClassifier(
+    n_neighbors=3
+)
+
+
+# ============================================================
+# TREINAR
+# ============================================================
+
+modelo_logistico.fit(
+    X_train_vec,
+    y_train
+)
+
+modelo_knn.fit(
+    X_train_vec,
+    y_train
+)
+
+print("\nModelos treinados!")
+
+
+# ============================================================
+# PREVISÕES
+# ============================================================
+
+y_pred_logistico = modelo_logistico.predict(
+    X_test_vec
+)
+
+y_pred_knn = modelo_knn.predict(
+    X_test_vec
+)
+
+
+# ============================================================
+# MÉTRICAS LOGÍSTICA
+# ============================================================
+
+accuracy_logistico = accuracy_score(
+    y_test,
+    y_pred_logistico
+)
+
+precision_logistico = precision_score(
+    y_test,
+    y_pred_logistico,
+    average="weighted",
+    zero_division=0
+)
+
+recall_logistico = recall_score(
+    y_test,
+    y_pred_logistico,
+    average="weighted",
+    zero_division=0
+)
+
+f1_logistico = f1_score(
+    y_test,
+    y_pred_logistico,
+    average="weighted",
+    zero_division=0
+)
+
+
+# ============================================================
+# MÉTRICAS KNN
+# ============================================================
+
+accuracy_knn = accuracy_score(
+    y_test,
+    y_pred_knn
+)
+
+precision_knn = precision_score(
+    y_test,
+    y_pred_knn,
+    average="weighted",
+    zero_division=0
+)
+
+recall_knn = recall_score(
+    y_test,
+    y_pred_knn,
+    average="weighted",
+    zero_division=0
+)
+
+f1_knn = f1_score(
+    y_test,
+    y_pred_knn,
+    average="weighted",
+    zero_division=0
+)
+
+
+# ============================================================
+# TABELA COMPARATIVA
+# ============================================================
+
+df_resultados = pd.DataFrame({
+
+    "Modelo": [
+        "Regressão Logística",
+        "KNN"
+    ],
+
+    "Accuracy": [
+        accuracy_logistico,
+        accuracy_knn
+    ],
+
+    "Precision": [
+        precision_logistico,
+        precision_knn
+    ],
+
+    "Recall": [
+        recall_logistico,
+        recall_knn
+    ],
+
+    "F1": [
+        f1_logistico,
+        f1_knn
+    ]
+
+})
+
+
+print("\n")
+print("=" * 70)
+print("TABELA COMPARATIVA")
+print("=" * 70)
+
+print(
+    df_resultados.to_string(
+        index=False
+    )
+)
+
+
+# ============================================================
+# RESULTADOS EM PORCENTAGEM
+# ============================================================
+
+print("\n")
+print("RESULTADOS EM PORCENTAGEM")
+print("-" * 70)
+
+for _, linha in df_resultados.iterrows():
+
+    print(f"\n{linha['Modelo']}")
+
+    print(
+        f"Accuracy:  {linha['Accuracy']:.2%}"
+    )
+
+    print(
+        f"Precision: {linha['Precision']:.2%}"
+    )
+
+    print(
+        f"Recall:    {linha['Recall']:.2%}"
+    )
+
+    print(
+        f"F1:        {linha['F1']:.2%}"
+    )
+
+
+# ============================================================
+# MELHOR MODELO
+# ============================================================
+
+if f1_logistico > f1_knn:
+
+    melhor_modelo = "Regressão Logística"
+
+elif f1_knn > f1_logistico:
+
+    melhor_modelo = "KNN"
+
+else:
+
+    melhor_modelo = "Empate"
+
+
+print("\n")
+print("=" * 70)
+print("MELHOR MODELO")
+print("=" * 70)
+
+print(
+    "Modelo com melhor F1-Score:",
+    melhor_modelo
+)
+
+
+# ============================================================
+# MATRIZ DE CONFUSÃO - KNN
+# ============================================================
+
+cm_knn = confusion_matrix(
+    y_test,
+    y_pred_knn
+)
+
+plt.figure(
+    figsize=(8, 6)
+)
+
+sns.heatmap(
+    cm_knn,
+    annot=True,
+    fmt="d",
+    cmap="Greens",
+    xticklabels=modelo_knn.classes_,
+    yticklabels=modelo_knn.classes_
+)
+
+plt.xlabel("Intenção prevista")
+plt.ylabel("Intenção real")
+plt.title("Matriz de Confusão - KNN")
+
+plt.tight_layout()
+plt.show()
+
+
+# ============================================================
+# TESTE OOD - FORA DO DOMÍNIO
+# ============================================================
+
+print("\n")
+print("=" * 70)
+print("TESTE OOD - MENSAGENS FORA DO DOMÍNIO")
+print("=" * 70)
+
+for mensagem in df_ood["mensagem"]:
+
+    intencao, confianca = classificar_mensagem(
+        mensagem,
+        modelo_logistico,
+        modelo_fasttext,
+        limiar=0.50
+    )
+
+    print("\n" + "-" * 70)
+
+    print("Mensagem:")
+    print(mensagem)
+
+    print("\nResultado:")
+    print(intencao)
+
+    print(
+        f"Confiança: {confianca:.2%}"
+    )
+
+print("=" * 70)
+print("FIM DO PROGRAMA")
+print("=" * 70)
