@@ -1,7 +1,16 @@
-Exercicio - 01 : 
-- Frase Original: Gostaria de saber se vocês estão DEVOLVENDO os valores das mesas compradas!!!
-- Frase Limpa & Lemmatizada: gostar saber devolver valor meso comprada
+Questão 1 — Qual modelo apresentou melhor desempenho?
+O melhor modelo foi o que apresentou os maiores resultados de Accuracy e F1-Score nos testes. Essas métricas mostram o quanto o modelo conseguiu acertar as intenções das mensagens.
 
-Exercicio - 02 :
--Carregando modelo de Embeddings FastText (Gensim)...
--Formato da Matriz de Vetores Densos (Exemplos, Dimensões): (32, 50)
+Questão 2 — Por que os resultados podem ser diferentes mesmo usando os mesmos embeddings?
+Porque os dois algoritmos trabalham de formas diferentes. A Regressão Logística aprende padrões para separar as classes, enquanto o KNN procura mensagens semelhantes e verifica a intenção dos vizinhos mais próximos.
+
+Questão 3 — Por que a qualidade dos embeddings é importante para o KNN?
+Porque o KNN depende da distância entre os vetores. Se mensagens com significados parecidos ficarem próximas no espaço vetorial, o KNN tende a acertar mais. Se os vetores forem ruins,
+ele pode encontrar mensagens erradas como vizinhas.
+
+Questão 4 — Com 100 mil mensagens e centenas de intenções, você escolheria KNN?
+Não. O KNN pode ficar mais lento com uma quantidade muito grande de mensagens, pois precisa procurar os vizinhos mais próximos. Nesse caso, a Regressão Logística seria uma opção mais adequada e escalável.
+
+Questão 5 — Qual modelo você escolheria para produção?
+Eu escolheria a Regressão Logística, principalmente por ser mais adequada para grandes quantidades de dados e por permitir usar o predict_proba() para verificar a confiança da previsão.
+Isso também facilita o uso do fallback, enviando para um atendente humano as mensagens em que o modelo não tiver confiança suficiente.
