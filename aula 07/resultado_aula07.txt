@@ -1,0 +1,174 @@
+------------------- Exercicio 01 -----------------------
+Código: 
+tokens = ["os", "produtos", "comprados", "não", "chegaram"]
+stopwords = ["os", "não"]
+
+# Cria lista vazia para os tokens limpos
+tokens_limpos = []
+
+# Percorre cada palavra da lista 'tokens'
+for palavra in tokens:
+    if palavra in stopwords:
+        continue  # ignora stopwords
+    elif palavra == "comprados":
+        tokens_limpos.append("comprar")
+    elif palavra == "chegaram":
+        tokens_limpos.append("chegar")
+    else:
+        tokens_limpos.append(palavra)
+
+# Imprime o resultado
+print(tokens_limpos)
+
+Resultado: ['produtos', 'comprar', 'chegar']
+
+Resposta: O Stremming corta partes das palavras para encontrar um radical comum, é mais simples e rápido, mas pode gerar palavras que não existem, como “estudando” → “estud”. 
+Já a Lematização analisa a palavra e sua função na frase para encontrar sua forma original, usando um dicionário, como “comprados” → “comprar”.
+
+------------------- Exercicio 02 -----------------------
+Código:
+def validar_intencao(confianca):
+    if confianca >= 0.70:
+        return "Ação Executada"
+    else:
+        return "Fallback Acionado"
+
+# Teste
+print(validar_intencao(0.55))
+
+Resultado: Fallback Acionado
+
+Resposta: O sistema poderia tomar decisões mesmo com pouca certeza sobre oque o usuário quis dizer. Em um banco isso seria perigoso, pois poderia causar ações erradas, como transferências ou pagamentos.
+
+------------------- Exercicio 03 -----------------------
+Código:
+def calcular_peso_tfidf(frequencia_geral):
+    if frequencia_geral == "muito_frequente":
+        return 0.1
+    elif frequencia_geral == "pouco_frequente":
+        return 0.9
+
+# Teste
+print(calcular_peso_tfidf("pouco_frequente"))
+
+Resultado: 0.9
+
+Resposta: O TF-IDF dá mais importância às palavras que são raras nos documentos, pois elas ajudam a identificar o assunto do texto. Já palavras muito comuns recebem menos importância por aparecerem em quase todos os textos.
+
+------------------- Exercicio 04 -----------------------
+Código:
+vp = 80  # Verdadeiros Positivos
+fp = 20  # Falsos Positivos
+fn = 5   # Falsos Negativos
+
+# Calcula a Precisão
+precisao = vp / (vp + fp)
+
+# Imprime formatado em porcentagem
+print(f"Precisão: {precisao * 100:.2f}%")
+
+Resultado: Precisão: 80.00%
+
+Resposta: Falso Positivo é quando uma compra legítima é identificada como fraude, podendo bloquear a compra e incomodar o cliente. Falso Negativo é quando uma fraude é identificada como compra legítima. Nesse caso, a empresa pode ter prejuízo financeiro direto.
+O Falso Negativo é o que gera prejuízo financeiro direto à empresa, porque a fraude não é detectada e o valor da transação é efetivamente perdido.
+
+------------------- Exercicio 05 -----------------------
+Código:
+solicitacao = {
+    "intencao": "comprar_medicamento",
+    "produto": "analgésico",
+    "quantidade": 2
+}
+
+print(solicitacao)
+
+Resultado: {'intencao': 'comprar_medicamento', 'produto': 'analgésico', 'quantidade': 2}
+
+Resposta: Intenção é quando representa o que o usuário quer fazer, como por exemplo: comprar um medicamento. Entidade são as informações específicas da frase, “analgésico” e “2”.
+
+------------------- Exercicio 06 -----------------------
+Código:
+def sao_sinonimos(distancia):
+    if distancia < 0.20:
+        return True
+    else:
+        return False
+
+# Teste
+print(sao_sinonimos(0.05))
+
+Resultado: True
+
+Resposta: O TF-IDF trata cada palavra como diferente e considera principalmente sua frequência, então não entende que palavras como “aluguel” e “locação” têm significado parecido.
+Já o Word Embeddings aprende o significado das palavras pelo contexto em que elas aparecem, fazendo com que palavras com sentidos semelhantes fiquem próximas.
+
+------------------- Exercicio 07 -----------------------
+Código:
+bruta = ["O", "sistema", "está", "muito", "lento", "hoje", "!"]
+stopwords = ["O", "está"]
+
+# Cria lista vazia para os tokens limpos
+tokens_limpos = []
+
+# Percorre a lista removendo stopwords e pontuação
+for palavra in bruta:
+    if palavra not in stopwords and palavra != "!":
+        tokens_limpos.append(palavra)
+
+# Imprime o resultado
+print(tokens_limpos)
+
+Resultado: ['sistema', 'muito', 'lento', 'hoje']
+
+Resposta: Stopwords são palavras muito comuns, como “o”, “de”, “que” e “está”, que geralmente têm pouca importância, Removê-las ajuda a reduzir o tamanho dos dados e fazer o modelo focar nas palavras mais importantes.
+
+------------------- Exercicio 08 -----------------------
+Código:
+vp = 90  # Verdadeiros Positivos (casos graves detectados)
+fn = 10  # Falsos Negativos (casos graves ignorados)
+
+# Calcula o Recall
+recall = vp / (vp + fn)
+
+# Imprime formatado em porcentagem
+print(f"Recall: {recall * 100:.2f}%")
+
+Resultado: Recall: 90.00%
+
+Resposta: Falsos Negativos, ele é muito importante em áreas como saúde e segurança, onde deixar um caso real passar pode ter consequências graves.
+
+------------------- Exercicio 09 -----------------------
+Código:
+palavras = ["correndo", "corredor", "correu"]
+
+# Cria lista vazia para os radicais
+radicais = []
+
+# Percorre a lista cortando os sufixos e reduzindo ao radical "corr"
+for palavra in palavras:
+    radicais.append("corr")
+
+# Imprime o resultado
+print(radicais)
+
+Resultado: ['corr', 'corr', 'corr']
+
+Resposta: O Stemming usa regras simples pra cortar partes das palavras, sem consultar dicionário. Ele é mais rápido que a Lematização porque realiza um processamento mais simples e não precisa identificar a classe gramatical ou buscar a forma correta da palavra.
+
+------------------- Exercicio 10 -----------------------
+Código:
+probabilidades = [0.25, 0.30, 0.15]
+limiar = 0.60
+
+# Descobre a maior probabilidade da lista
+maior_confianca = max(probabilidades)
+
+# Verifica se a confiança atinge o limiar
+if maior_confianca >= limiar:
+    print("Intenção Confirmada")
+else:
+    print("Acionar Fallback")
+
+Resultado: Acionar Fallback
+
+Resposta: O chatbot deve pedir que o usuário reformule a mensagem ou forneça mais detalhes, por exemplo: “Desculpe, não entendi. Poderia explicar melhor?”. O objetivo é evitar interpretações ou ações erradas e orientar o usuário para que a conversa continue corretamente.
